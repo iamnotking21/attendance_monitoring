@@ -2,7 +2,7 @@
 
 import { useLiveQuery } from "dexie-react-hooks";
 import { Users } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { useMemo, useState } from "react";
 
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -143,12 +143,12 @@ export function DashboardView() {
                     aria-selected={active}
                     onClick={() => setTab(entry.key)}
                     className={cn(
-                      "relative min-h-9 whitespace-nowrap rounded-md px-3 text-sm font-medium transition-colors duration-150",
+                      "relative min-h-11 whitespace-nowrap rounded-md px-3 text-sm font-medium transition-colors duration-150 sm:min-h-9",
                       active ? "text-ink" : "text-muted hover:text-ink",
                     )}
                   >
                     {active ? (
-                      <motion.span
+                      <m.span
                         layoutId="roster-tab"
                         className="absolute inset-0 rounded-md bg-surface shadow-sm"
                         transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
@@ -228,7 +228,7 @@ function RosterPanel({
             <ul className="mt-1 divide-y divide-border">
               <AnimatePresence initial={false}>
                 {group.map((row, index) => (
-                  <motion.li
+                  <m.li
                     key={row.key}
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -248,7 +248,7 @@ function RosterPanel({
                       </p>
                     </div>
                     {row.status ? <StatusBadge status={row.status} /> : null}
-                  </motion.li>
+                  </m.li>
                 ))}
               </AnimatePresence>
             </ul>
@@ -328,7 +328,7 @@ function StatTile({
   return (
     <Card className="px-4 py-3.5">
       <p className="text-xs font-medium uppercase tracking-wide text-subtle">{label}</p>
-      <motion.p
+      <m.p
         key={String(value)}
         initial={{ opacity: 0, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
@@ -336,7 +336,7 @@ function StatTile({
         className={cn("mt-1 text-2xl font-semibold tabular sm:text-3xl", toneClass)}
       >
         {value}
-      </motion.p>
+      </m.p>
     </Card>
   );
 }

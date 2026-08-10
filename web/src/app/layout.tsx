@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 
 import { AppShell } from "@/components/layout/AppShell";
+import { MotionPreferences } from "@/components/motion/MotionPreferences";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AppBootstrap } from "@/features/app/AppBootstrap";
 
@@ -15,11 +16,9 @@ const inter = Inter({
   display: "swap",
 });
 
-const mono = JetBrains_Mono({
-  variable: "--font-mono-stack",
-  subsets: ["latin"],
-  display: "swap",
-});
+// Student numbers are set in a monospace face, but shipping a second webfont for a handful of
+// short strings cost 40 kB compressed. The platform's own monospace font does the same job for
+// nothing, and every target OS has a good one.
 
 export const metadata: Metadata = {
   title: {
@@ -45,12 +44,14 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${inter.variable} ${mono.variable} h-full`}>
+    <html lang="en" className={`${inter.variable} h-full`}>
       <body className="min-h-dvh">
-        <ToastProvider>
-          <AppBootstrap />
-          <AppShell>{children}</AppShell>
-        </ToastProvider>
+        <MotionPreferences>
+          <ToastProvider>
+            <AppBootstrap />
+            <AppShell>{children}</AppShell>
+          </ToastProvider>
+        </MotionPreferences>
       </body>
     </html>
   );

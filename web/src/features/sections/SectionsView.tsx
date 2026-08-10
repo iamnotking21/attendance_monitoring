@@ -2,7 +2,7 @@
 
 import { useLiveQuery } from "dexie-react-hooks";
 import { ChevronRight, Pencil, Plus, Trash2, Users } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -88,7 +88,7 @@ export function SectionsView() {
         <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           <AnimatePresence initial={false}>
             {(sections ?? []).map((section, index) => (
-              <motion.li
+              <m.li
                 key={section.id}
                 layout
                 initial={{ opacity: 0, y: 8 }}
@@ -137,7 +137,7 @@ export function SectionsView() {
                     </Button>
                   </div>
                 </Card>
-              </motion.li>
+              </m.li>
             ))}
           </AnimatePresence>
         </ul>

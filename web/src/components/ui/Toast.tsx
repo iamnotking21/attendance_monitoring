@@ -1,7 +1,7 @@
 "use client";
 
 import { CircleAlert, CircleCheck, Info } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import {
   createContext,
   useCallback,
@@ -61,7 +61,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           {toasts.map((toast) => {
             const Icon = TONE_ICONS[toast.tone];
             return (
-              <motion.div
+              <m.div
                 key={toast.id}
                 layout
                 initial={{ opacity: 0, y: 12, scale: 0.97 }}
@@ -75,7 +75,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               >
                 <Icon aria-hidden className="mt-0.5 size-4 shrink-0" />
                 <span className="min-w-0">{toast.message}</span>
-              </motion.div>
+              </m.div>
             );
           })}
         </AnimatePresence>

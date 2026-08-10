@@ -35,7 +35,8 @@
   --radius-card: 0.875rem;
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-mono-stack), ui-monospace, SFMono-Regular, monospace;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas,
+    monospace;
 
   --shadow-card: 0 1px 2px rgb(16 19 28 / 0.04), 0 8px 24px -12px rgb(16 19 28 / 0.12);
   --shadow-pop: 0 12px 40px -12px rgb(16 19 28 / 0.28);

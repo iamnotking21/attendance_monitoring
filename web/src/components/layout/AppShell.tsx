@@ -9,7 +9,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
@@ -86,7 +86,7 @@ function SideNav({ pathname }: { pathname: string }) {
                 {active ? (
                   // One shared layout ID, so the highlight slides between items rather than
                   // blinking out in one place and in again in another.
-                  <motion.span
+                  <m.span
                     layoutId="nav-active"
                     className="absolute inset-0 rounded-lg bg-primary-soft"
                     transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}

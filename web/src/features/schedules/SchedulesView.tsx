@@ -2,7 +2,7 @@
 
 import { useLiveQuery } from "dexie-react-hooks";
 import { CalendarClock, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { useState } from "react";
 
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -111,7 +111,7 @@ export function SchedulesView() {
         <ul className="grid gap-3 lg:grid-cols-2">
           <AnimatePresence initial={false}>
             {(schedules ?? []).map((schedule, index) => (
-              <motion.li
+              <m.li
                 key={schedule.id}
                 layout
                 initial={{ opacity: 0, y: 8 }}
@@ -128,7 +128,7 @@ export function SchedulesView() {
                   onEdit={() => setEditing(schedule)}
                   onDelete={() => setPendingDelete(schedule)}
                 />
-              </motion.li>
+              </m.li>
             ))}
           </AnimatePresence>
         </ul>

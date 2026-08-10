@@ -13,9 +13,16 @@ import type { NextConfig } from "next";
  * that trade buys very little; the injection surface that matters here is the DOM, which is
  * closed off by rendering all stored values as text rather than as markup.
  */
+// React's development build uses eval() to rebuild stack traces across environments. It is
+// never used in a production build, so the allowance is scoped to `next dev` only.
+const scriptSrc =
+  process.env.NODE_ENV === "production"
+    ? "script-src 'self' 'unsafe-inline'"
+    : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
+
 const CSP = [
   "default-src 'none'",
-  "script-src 'self' 'unsafe-inline'",
+  scriptSrc,
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self'",
   // data: for generated QR codes, blob: for downloads the app builds in the browser.
@@ -59,8 +66,10 @@ const SECURITY_HEADERS = [
 ];
 
 const nextConfig: NextConfig = {
-  // Emits a self-contained server bundle, which keeps the Docker runtime layer small.
-  output: "standalone",
+  // The self-contained server bundle keeps the Docker runtime layer small, but it is incompatible
+  // with `next start` — so it is opt-in, set only by the Dockerfile. Vercel does not need it,
+  // and local `npm start` and the end-to-end suite stay on the ordinary server.
+  output: process.env.BUILD_STANDALONE === "1" ? "standalone" : undefined,
   poweredByHeader: false,
   reactStrictMode: true,
 

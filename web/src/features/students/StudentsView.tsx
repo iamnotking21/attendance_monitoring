@@ -2,7 +2,7 @@
 
 import { useLiveQuery } from "dexie-react-hooks";
 import { ArrowLeft, Pencil, Plus, QrCode, Search, Trash2, UserPlus } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { useMemo, useState } from "react";
 
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -126,7 +126,7 @@ export function StudentsView({ sectionId }: { sectionId: number }) {
           <ul className="divide-y divide-border">
             <AnimatePresence initial={false}>
               {visible.map((student, index) => (
-                <motion.li
+                <m.li
                   key={student.id}
                   layout
                   initial={{ opacity: 0, y: 6 }}
@@ -168,7 +168,7 @@ export function StudentsView({ sectionId }: { sectionId: number }) {
                       onClick={() => setPendingDelete(student)}
                     />
                   </div>
-                </motion.li>
+                </m.li>
               ))}
             </AnimatePresence>
           </ul>

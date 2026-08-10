@@ -43,9 +43,20 @@ present in `next.config.ts`, no exploitable advisory. Owner: `security-auditor`.
 npm run build
 ```
 
-Pass: build succeeds; every route's First Load JS under 160 kB; shared chunk under 110 kB;
-camera, QR, and spreadsheet code confirmed absent from the shared chunk. Owner:
-`performance-optimizer`.
+Pass: build succeeds, and the measured budget holds. Budgets are in **compressed transfer bytes**
+(`PerformanceResourceTiming.encodedBodySize`), not the uncompressed sizes a bundler prints —
+those run about three times larger and would flatter every result:
+
+| Budget | Limit |
+|---|---|
+| Entry JS on first load | 320 kB |
+| Per-route incremental JS | 25 kB |
+| Font payload | 60 kB |
+| Blocking third-party requests | 0 |
+
+Camera, QR, spreadsheet, and animation-engine code must each be confirmed absent from the entry
+bundle. Rationale for these specific numbers, and what the stack costs before application code:
+`docs/performance.md`. Owner: `performance-optimizer`.
 
 ## Gate 4 — Runtime and responsive
 

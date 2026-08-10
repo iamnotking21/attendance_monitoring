@@ -1,0 +1,34 @@
+# Everything the image must never carry: dependency trees that will be reinstalled, build
+# output that will be regenerated, history, and above all any secret.
+**/node_modules
+**/.next
+**/out
+**/dist
+**/build
+**/coverage
+**/playwright-report
+**/test-results
+
+.git
+.gitignore
+.github
+.claude
+
+**/.env
+**/.env.*
+**/*.pem
+**/*.key
+**/*.keystore
+**/*.jks
+**/local.properties
+
+# The legacy Android project is reference material, not part of the web image.
+mobile-android
+
+**/*.log
+**/.DS_Store
+**/Thumbs.db
+**/.idea
+**/.vscode
+docs
+README.md

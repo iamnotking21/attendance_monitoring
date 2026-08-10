@@ -1,0 +1,35 @@
+# Run the production image locally:
+#   docker compose -f devops/compose.yaml up --build
+#
+# There is no database service, and that is not an omission: every attendance record lives in
+# the operator's own browser. The container serves static assets and nothing else, so it holds
+# no state worth persisting and no volume worth mounting.
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: devops/Dockerfile
+    image: attendance-web:local
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

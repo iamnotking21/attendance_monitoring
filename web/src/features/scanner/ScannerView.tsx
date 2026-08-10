@@ -1,7 +1,7 @@
 "use client";
 
 import { CameraOff, Keyboard, ScanLine } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -235,7 +235,7 @@ export function ScannerView() {
             <ul className="divide-y divide-border">
               <AnimatePresence initial={false}>
                 {feed.map((entry) => (
-                  <motion.li
+                  <m.li
                     key={entry.id}
                     layout
                     initial={{ opacity: 0, x: -8 }}
@@ -258,7 +258,7 @@ export function ScannerView() {
                       </p>
                     </div>
                     {entry.status ? <StatusBadge status={entry.status} /> : null}
-                  </motion.li>
+                  </m.li>
                 ))}
               </AnimatePresence>
             </ul>

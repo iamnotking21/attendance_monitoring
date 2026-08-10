@@ -2,7 +2,7 @@
 
 import { useLiveQuery } from "dexie-react-hooks";
 import { FileSpreadsheet, ScrollText } from "lucide-react";
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import { useMemo, useState } from "react";
 
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -225,7 +225,7 @@ export function ReportsView() {
               </thead>
               <tbody className="divide-y divide-border">
                 {summaries.map((summary, index) => (
-                  <motion.tr
+                  <m.tr
                     key={summary.student.id}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -262,7 +262,7 @@ export function ReportsView() {
                     >
                       {summary.sessions === 0 ? "—" : formatRate(summary.rate)}
                     </td>
-                  </motion.tr>
+                  </m.tr>
                 ))}
               </tbody>
             </table>

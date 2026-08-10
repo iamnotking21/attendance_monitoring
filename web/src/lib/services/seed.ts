@@ -71,7 +71,40 @@ export async function isDatabaseEmpty(): Promise<boolean> {
   return sections === 0 && students === 0 && records === 0;
 }
 
-export async function seedDemoData(now: Date = new Date()): Promise<boolean> {
+/**
+ * De-duplicates concurrent callers within one page. React's development Strict Mode runs the
+ * bootstrap effect twice, and without this both runs would be in flight before either had
+ * written anything.
+ */
+let inFlight: Promise<boolean> | null = null;
+
+export function seedDemoData(now: Date = new Date()): Promise<boolean> {
+  inFlight ??= runSeed(now).finally(() => {
+    inFlight = null;
+  });
+  return inFlight;
+}
+
+async function runSeed(now: Date): Promise<boolean> {
+  const database = db();
+
+  // The emptiness check and the writes share one transaction, so a second caller that slipped
+  // past the in-flight guard — another tab, say — sees the seeded data and backs out. Checking
+  // outside the transaction is what produced two copies of every section.
+  return database.transaction(
+    "rw",
+    [
+      database.sections,
+      database.students,
+      database.schedules,
+      database.records,
+      database.schoolDays,
+    ],
+    () => seedWithinTransaction(now),
+  );
+}
+
+async function seedWithinTransaction(now: Date): Promise<boolean> {
   if (!(await isDatabaseEmpty())) return false;
 
   const createdAt = now.toISOString();
