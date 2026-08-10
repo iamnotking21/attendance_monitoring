@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Attendance Monitoring">
+  <rect width="64" height="64" rx="14" fill="#4338ca"/>
+  <g fill="#ffffff">
+    <path d="M14 14h14v14H14V14Zm4 4v6h6v-6h-6Z"/>
+    <path d="M36 14h14v14H36V14Zm4 4v6h6v-6h-6Z"/>
+    <path d="M14 36h14v14H14V36Zm4 4v6h6v-6h-6Z"/>
+  </g>
+  <path d="m35 43 5 5 11-11" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
