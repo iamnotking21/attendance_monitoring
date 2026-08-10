@@ -55,15 +55,30 @@ describe("seedDemoData", () => {
     await Promise.all([first, second]);
   });
 
-  it("produces identical data on every run, given the same clock", async () => {
+  it("produces the same attendance history on every run, given the same clock", async () => {
+    // Identifiers are fresh UUIDs on every run, so comparing them would only ever prove that
+    // randomUUID is random. What must be stable is the history a visitor actually sees: who was
+    // marked what, on which day, for which schedule.
+    const withoutIds = (
+      records: { studentNumber: string; date: string; status: string; scheduleTitle: string }[],
+    ) =>
+      records
+        .map(({ studentNumber, date, status, scheduleTitle }) => ({
+          studentNumber,
+          date,
+          status,
+          scheduleTitle,
+        }))
+        .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
+
     await seedDemoData(new Date(2024, 2, 15, 9, 0));
-    const first = await database.records.toArray();
+    const first = withoutIds(await database.records.toArray());
 
     await database.delete();
     database = await freshDatabase();
 
     await seedDemoData(new Date(2024, 2, 15, 9, 0));
-    const second = await database.records.toArray();
+    const second = withoutIds(await database.records.toArray());
 
     expect(second).toEqual(first);
   });

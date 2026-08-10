@@ -251,7 +251,7 @@ function ScheduleDialog({
   onSaved,
 }: {
   target: Schedule | "new" | null;
-  sectionId: number;
+  sectionId: string;
   onClose: () => void;
   onSaved: (message: string) => void;
 }) {

@@ -1,6 +1,7 @@
 import Dexie from "dexie";
 
 import { recordKey, type AttendanceRecord, type NewAttendanceRecord } from "@/domain/model";
+import { newId } from "@/domain/primitives";
 import type { IsoDate } from "@/domain/primitives";
 import { db } from "@/lib/db";
 
@@ -9,14 +10,14 @@ export async function listRecordsByDate(date: IsoDate): Promise<AttendanceRecord
 }
 
 export async function listRecordsBySectionAndDate(
-  sectionId: number,
+  sectionId: string,
   date: IsoDate,
 ): Promise<AttendanceRecord[]> {
   return db().records.where("[sectionId+date]").equals([sectionId, date]).toArray();
 }
 
 export async function listRecordsBySectionBetween(
-  sectionId: number,
+  sectionId: string,
   start: IsoDate,
   end: IsoDate,
 ): Promise<AttendanceRecord[]> {
@@ -44,7 +45,7 @@ export async function existingKeysForDate(date: IsoDate): Promise<Set<string>> {
 }
 
 export async function existingKeysForSchedule(
-  scheduleId: number,
+  scheduleId: string,
   date: IsoDate,
 ): Promise<Set<string>> {
   const records = await db()
@@ -66,7 +67,7 @@ export async function appendRecords(records: readonly NewAttendanceRecord[]): Pr
   if (records.length === 0) return 0;
 
   try {
-    await db().records.bulkAdd(records as NewAttendanceRecord[]);
+    await db().records.bulkAdd(records.map((record) => ({ ...record, id: newId() })));
     return records.length;
   } catch (error) {
     if (error instanceof Dexie.BulkError) {

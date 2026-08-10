@@ -26,7 +26,8 @@
     "react-dom": "19.2.8",
     "tailwind-merge": "^3.6.0",
     "write-excel-file": "^4.1.1",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "@attendance/sync": "*"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

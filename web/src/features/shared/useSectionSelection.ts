@@ -9,8 +9,8 @@ import { listSections } from "@/lib/repositories/sections";
 export interface SectionSelection {
   sections: Section[] | undefined;
   selected: Section | undefined;
-  selectedId: number | undefined;
-  select: (id: number) => void;
+  selectedId: string | undefined;
+  select: (id: string) => void;
   loading: boolean;
 }
 
@@ -21,7 +21,7 @@ export interface SectionSelection {
  */
 export function useSectionSelection(): SectionSelection {
   const sections = useLiveQuery(() => listSections(), [], undefined);
-  const [chosenId, setChosenId] = useState<number | undefined>();
+  const [chosenId, setChosenId] = useState<string | undefined>();
 
   // Derived rather than synchronised through an effect: if the chosen section is deleted or has
   // not been picked yet, the first one stands in on this render instead of after an extra one.

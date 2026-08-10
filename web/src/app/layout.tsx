@@ -5,6 +5,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { MotionPreferences } from "@/components/motion/MotionPreferences";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AppBootstrap } from "@/features/app/AppBootstrap";
+import { ServiceWorker } from "@/features/app/ServiceWorker";
 
 import "./globals.css";
 
@@ -49,6 +50,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <MotionPreferences>
           <ToastProvider>
             <AppBootstrap />
+            <ServiceWorker />
             <AppShell>{children}</AppShell>
           </ToastProvider>
         </MotionPreferences>

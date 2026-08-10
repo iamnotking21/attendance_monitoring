@@ -11,18 +11,18 @@ import {
   tally,
 } from "@/domain/reporting";
 
-import { makeStudent } from "../fixtures";
+import { IDS, makeStudent } from "../fixtures";
 
 function makeRecord(
   studentNumber: string,
   status: AttendanceStatus,
   date: string,
-  id = 1,
+  id: string = IDS.record,
 ): AttendanceRecord {
   return {
     id,
-    scheduleId: 1,
-    sectionId: 1,
+    scheduleId: IDS.schedule,
+    sectionId: IDS.section,
     studentNumber,
     date,
     status,
@@ -34,10 +34,10 @@ function makeRecord(
 describe("tally and attendanceRate", () => {
   it("counts each status", () => {
     const counts = tally([
-      makeRecord("a", "present", "2024-03-01", 1),
-      makeRecord("a", "late", "2024-03-02", 2),
-      makeRecord("a", "absent", "2024-03-03", 3),
-      makeRecord("a", "present", "2024-03-04", 4),
+      makeRecord("a", "present", "2024-03-01", "rec-1"),
+      makeRecord("a", "late", "2024-03-02", "rec-2"),
+      makeRecord("a", "absent", "2024-03-03", "rec-3"),
+      makeRecord("a", "present", "2024-03-04", "rec-4"),
     ]);
 
     expect(counts).toEqual({ present: 2, late: 1, absent: 1 });
@@ -63,18 +63,18 @@ describe("tally and attendanceRate", () => {
 
 describe("summariseStudents", () => {
   const students = [
-    makeStudent({ id: 1, studentNumber: "s1", lastName: "Alvarez", firstName: "Ana" }),
-    makeStudent({ id: 2, studentNumber: "s2", lastName: "Bautista", firstName: "Ben" }),
-    makeStudent({ id: 3, studentNumber: "s3", lastName: "Castro", firstName: "Cara" }),
+    makeStudent({ id: "stu-1", studentNumber: "s1", lastName: "Alvarez", firstName: "Ana" }),
+    makeStudent({ id: "stu-2", studentNumber: "s2", lastName: "Bautista", firstName: "Ben" }),
+    makeStudent({ id: "stu-3", studentNumber: "s3", lastName: "Castro", firstName: "Cara" }),
   ];
 
   const records = [
-    makeRecord("s1", "present", "2024-03-01", 1),
-    makeRecord("s1", "late", "2024-03-02", 2),
-    makeRecord("s2", "absent", "2024-03-01", 3),
+    makeRecord("s1", "present", "2024-03-01", "rec-1"),
+    makeRecord("s1", "late", "2024-03-02", "rec-2"),
+    makeRecord("s2", "absent", "2024-03-01", "rec-3"),
     // Outside the range under test.
-    makeRecord("s1", "present", "2024-02-28", 4),
-    makeRecord("s2", "present", "2024-03-10", 5),
+    makeRecord("s1", "present", "2024-02-28", "rec-4"),
+    makeRecord("s2", "present", "2024-03-10", "rec-5"),
   ];
 
   const range = { start: "2024-03-01", end: "2024-03-05" };
@@ -98,7 +98,7 @@ describe("summariseStudents", () => {
   });
 
   it("excludes archived students", () => {
-    const withArchived = [...students, makeStudent({ id: 4, studentNumber: "s4", archived: true })];
+    const withArchived = [...students, makeStudent({ id: "stu-4", studentNumber: "s4", archived: true })];
     const summaries = summariseStudents(withArchived, records, range);
 
     expect(summaries.map((s) => s.student.studentNumber)).not.toContain("s4");
@@ -112,16 +112,16 @@ describe("summariseStudents", () => {
 
 describe("buildDashboard", () => {
   const students = [
-    makeStudent({ id: 1, studentNumber: "s1", lastName: "Alvarez", gender: "female" }),
-    makeStudent({ id: 2, studentNumber: "s2", lastName: "Bautista", gender: "male" }),
-    makeStudent({ id: 3, studentNumber: "s3", lastName: "Castro", gender: "male" }),
+    makeStudent({ id: "stu-1", studentNumber: "s1", lastName: "Alvarez", gender: "female" }),
+    makeStudent({ id: "stu-2", studentNumber: "s2", lastName: "Bautista", gender: "male" }),
+    makeStudent({ id: "stu-3", studentNumber: "s3", lastName: "Castro", gender: "male" }),
   ];
 
   const date = "2024-03-15";
   const records = [
-    makeRecord("s1", "present", date, 1),
-    makeRecord("s2", "late", date, 2),
-    makeRecord("s1", "present", "2024-03-14", 3),
+    makeRecord("s1", "present", date, "rec-1"),
+    makeRecord("s2", "late", date, "rec-2"),
+    makeRecord("s1", "present", "2024-03-14", "rec-3"),
   ];
 
   it("counts only the chosen day", () => {
@@ -135,7 +135,7 @@ describe("buildDashboard", () => {
   });
 
   it("drops records whose student has since been removed", () => {
-    const orphaned = [...records, makeRecord("gone", "present", date, 9)];
+    const orphaned = [...records, makeRecord("gone", "present", date, "rec-9")];
     const breakdown = buildDashboard(students, orphaned, date);
 
     expect(breakdown.entries).toHaveLength(2);

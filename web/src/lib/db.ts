@@ -9,9 +9,19 @@ import type {
 } from "@/domain/model";
 
 /**
- * All data lives in the browser, exactly as the original Android app kept it on the device.
- * Nothing leaves the machine, which is the right default for a roster of minors' names: there
- * is no server to breach and no third party to trust.
+ * Local storage entry for anything that is about this device rather than about the school —
+ * the sync cursor, the workspace credentials, the device identifier. Deliberately not synced.
+ */
+export interface MetaEntry {
+  key: string;
+  value: unknown;
+}
+
+/**
+ * The device's own copy of everything, and the source of truth while offline.
+ *
+ * Named `_v2` because the primary keys changed from auto-incrementing integers to UUIDs, which
+ * IndexedDB cannot alter in place. `migrateLegacyDatabase` moves any v1 data across on startup.
  */
 export class AttendanceDatabase extends Dexie {
   sections!: EntityTable<Section, "id">;
@@ -19,20 +29,23 @@ export class AttendanceDatabase extends Dexie {
   schedules!: EntityTable<Schedule, "id">;
   records!: EntityTable<AttendanceRecord, "id">;
   schoolDays!: EntityTable<SchoolDay, "date">;
+  meta!: EntityTable<MetaEntry, "key">;
 
-  constructor(name = "attendance_monitoring") {
+  constructor(name = "attendance_monitoring_v2") {
     super(name);
 
     this.version(1).stores({
-      sections: "++id, name, archived",
-      students: "++id, sectionId, studentNumber, archived, [sectionId+archived]",
-      schedules: "++id, sectionId, archived, [sectionId+archived]",
+      // `id` without `++`: the application mints a UUID, storage never assigns one.
+      sections: "id, name, archived, updatedAt",
+      students: "id, sectionId, studentNumber, archived, updatedAt, [sectionId+archived]",
+      schedules: "id, sectionId, archived, updatedAt, [sectionId+archived]",
       // The compound unique index is the real guarantee behind "one record per student, per
       // schedule, per day". Enforcing it in application code alone would lose the race between
-      // a double-tap scan and the absentee sweep.
+      // a double-tap scan and the absentee sweep — and, now, between two devices syncing.
       records:
-        "++id, date, sectionId, scheduleId, studentNumber, &[studentNumber+scheduleId+date], [sectionId+date], [scheduleId+date]",
+        "id, date, sectionId, scheduleId, studentNumber, recordedAt, &[studentNumber+scheduleId+date], [sectionId+date], [scheduleId+date]",
       schoolDays: "&date",
+      meta: "key",
     });
   }
 }
@@ -58,4 +71,19 @@ export function isQuotaError(error: unknown): boolean {
     error instanceof Error &&
     (error.name === "QuotaExceededError" || error.name === "NotEnoughSpaceError")
   );
+}
+
+/* ------------------------------------------------------------------ metadata */
+
+export async function readMeta<T>(key: string): Promise<T | undefined> {
+  const entry = await db().meta.get(key);
+  return entry?.value as T | undefined;
+}
+
+export async function writeMeta(key: string, value: unknown): Promise<void> {
+  await db().meta.put({ key, value });
+}
+
+export async function clearMeta(key: string): Promise<void> {
+  await db().meta.delete(key);
 }

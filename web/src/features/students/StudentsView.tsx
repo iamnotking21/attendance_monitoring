@@ -25,7 +25,7 @@ import {
 } from "@/lib/repositories/students";
 import { QrCodeDialog } from "@/features/students/QrCodeDialog";
 
-export function StudentsView({ sectionId }: { sectionId: number }) {
+export function StudentsView({ sectionId }: { sectionId: string }) {
   const toast = useToast();
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<Student | "new" | null>(null);
@@ -222,7 +222,7 @@ function StudentDialog({
   onSaved,
 }: {
   target: Student | "new" | null;
-  sectionId: number;
+  sectionId: string;
   onClose: () => void;
   onSaved: (message: string) => void;
 }) {

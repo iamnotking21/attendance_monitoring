@@ -32,7 +32,7 @@ export function SectionsView() {
   const counts = useLiveQuery(
     async () => {
       const students = await db().students.toArray();
-      const map = new Map<number, number>();
+      const map = new Map<string, number>();
       for (const student of students) {
         if (student.archived) continue;
         map.set(student.sectionId, (map.get(student.sectionId) ?? 0) + 1);
@@ -40,7 +40,7 @@ export function SectionsView() {
       return map;
     },
     [],
-    new Map<number, number>(),
+    new Map<string, number>(),
   );
 
   async function handleDelete() {

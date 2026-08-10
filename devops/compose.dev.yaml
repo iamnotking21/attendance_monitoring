@@ -1,0 +1,28 @@
+# Postgres for local development and for the sync integration tests.
+#
+#   npm run db:up      start it
+#   npm run db:migrate  apply migrations
+#   npm run db:down    stop it and delete the volume
+#
+# Not for production. The password is in the file precisely because this database is disposable
+# and never leaves the machine; a deployment gets its URL from an environment variable instead.
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: attendance
+      POSTGRES_PASSWORD: attendance-local-only
+      POSTGRES_DB: attendance
+    ports:
+      - "55432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U attendance -d attendance"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres-data:

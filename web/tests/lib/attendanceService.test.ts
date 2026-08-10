@@ -11,7 +11,7 @@ import { exportBackup, resetDatabase, restoreBackupFromJson } from "@/lib/servic
 import { closeDatabase, freshDatabase } from "../helpers/db";
 
 let database: AttendanceDatabase;
-let sectionId: number;
+let sectionId: string;
 
 /** 15 March 2024, at a given local wall-clock time. */
 function at(hours: number, minutes = 0): Date {

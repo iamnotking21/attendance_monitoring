@@ -3,6 +3,10 @@
 Date: 2026-08-10 · Scope: `web/` · Method: static review, dependency audit, and live header
 inspection against the production container.
 
+> **Updated 2026-08-10** after the sync server was added. The original assessment below covered
+> an application with no server at all. The sync layer introduces a real network surface, audited
+> in [Sync server](#sync-server-added-2026-08-10) at the end of this document.
+
 ## Threat model
 
 The application has no server-side state, no accounts, no cookies, and no outbound requests. It
@@ -88,7 +92,7 @@ them rather than accepting typed objects on faith:
 | Input | Schema | Rejects |
 |---|---|---|
 | QR payload / typed student number | `studentNumberSchema` | markup, URLs, formulas, SQL, over-length, empty |
-| Route parameter `[sectionId]` | `Number.isInteger` guard, then `notFound()` | any non-numeric path segment |
+| Route parameter `[sectionId]` | `idSchema` (UUID), then `notFound()` | any path segment that is not a UUID |
 | Section, student, schedule forms | `sectionInputSchema`, `studentInputSchema`, `scheduleInputSchema` | blank names, invalid times, overlapping windows |
 | Imported backup file | `backupSchema` | wrong format, future version, malformed rows, 64 MB size cap, per-array element caps |
 | Dates and times | `isoDateSchema`, `time24Schema` | well-formatted dates that do not exist, such as `2023-02-29` |
@@ -145,3 +149,78 @@ can be read but has no route off the machine over the network — and by the fac
 credential, token, or server-side resource exists to steal. The proportionate mitigation is
 keeping dependencies current and re-running `npm audit` as a release gate, which
 `.claude/skills/ship-pipeline` requires at Gate 2.
+
+---
+
+## Sync server (added 2026-08-10)
+
+Optional, and off unless `DATABASE_URL` is set. When off, the endpoints answer 503 and the app is
+exactly the local-only application audited above.
+
+### Threat model, revised
+
+The server holds the same data the device does — names of minors and their daily movements — for
+every workspace that enrols. That makes three things matter that did not before: **tenant
+isolation** (one school must never see another's roster), **credential handling** (there are now
+credentials at all), and **abuse of unauthenticated endpoints**.
+
+### Findings
+
+| # | Severity | Finding | Status |
+|---|---|---|---|
+| 4 | MEDIUM | A join code grants full workspace access, and stays valid | Accepted, disclosed in the UI |
+| 5 | LOW | Data is stored unencrypted at rest, beyond what the host provides | Accepted |
+| 6 | INFO | No transport-level protection is enforced by the app | Handled by the platform |
+
+Nothing rated HIGH or CRITICAL.
+
+#### 4. Join codes are bearer secrets — MEDIUM, accepted
+
+Anyone holding the code can enrol a device and read everything. There is no approval step and no
+expiry. This is the deliberate consequence of having no accounts: attendance is taken by whoever
+holds the phone at the gate, and a login there produces a shared password on a sticky note rather
+than security.
+
+Mitigations: the code is ~59 bits from a 30-character alphabet chosen to survive being read
+aloud; joining is rate limited to 10 attempts per 15 minutes per caller, which makes an online
+sweep hopeless; each device receives its own token, so a lost phone is revoked alone; and the
+Sync screen states plainly that anyone with the code gets full access.
+
+Residual risk: a leaked code is a full compromise of one workspace until it is rotated. Rotation
+is not yet exposed in the UI — the next thing to add.
+
+#### 5. Unencrypted at rest — LOW, accepted
+
+Rows are stored in plain Postgres. Application-level encryption would require a key the server
+must also hold to serve pulls, which relocates the problem rather than solving it. Managed
+Postgres providers encrypt volumes at rest; that is the appropriate layer.
+
+#### 6. Transport — INFO
+
+The app sets `Strict-Transport-Security` and `upgrade-insecure-requests`, and Vercel serves
+HTTPS only. Self-hosting behind plain HTTP would send tokens in the clear; the deployment notes
+say to terminate TLS in front of the container.
+
+### Verified
+
+| Check | Evidence |
+|---|---|
+| Tenant isolation | Workspace id comes from the token, never the request body. Test: *"keeps one workspace's rows out of another's pull"*. |
+| Credentials at rest | Only SHA-256 hashes stored; plaintext returned once and never again. |
+| Timing attacks | `timingSafeEqual` on every secret comparison. |
+| Auth on every sync route | `requireWorkspace` before any handler body; 401 verified live. |
+| Input validation | Zod on every request; row counts capped at 2000 per push, body at 8 MB. Malformed input verified to return 400 with no stack trace. |
+| Error disclosure | Handlers map known errors to stable codes and log the rest; no driver text or stack reaches a caller. |
+| Rate limiting | Fixed window in Postgres, since serverless instances share no memory. Tested for both the limit and per-caller isolation. |
+| Injection | Drizzle parameterises everything; the two raw SQL statements use bound parameters, and the one interpolated fragment is an integer interval derived from a constant, never from user input. |
+| Idempotency | Re-pushing a batch after a failed response creates nothing twice — tested. |
+| Rate-limit keys | Caller IP is used to form a key and never stored as a column value. |
+
+`npm audit` across both workspaces: **0 vulnerabilities**.
+
+### Residual risk
+
+A leaked join code compromises one workspace's roster. That is the deliberate cost of a design
+with no accounts, and it is bounded to a single school by tenant isolation. The proportionate
+next step is a rotate-join-code action in the UI, alongside the per-device revocation that
+already exists in the data model.

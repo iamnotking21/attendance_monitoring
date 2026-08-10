@@ -1,4 +1,5 @@
-import type { Gender, New, NewAttendanceRecord, Schedule, Section, Student } from "@/domain/model";
+import type { AttendanceRecord, Gender, Schedule, Section, Student } from "@/domain/model";
+import { newId } from "@/domain/primitives";
 import { addDays, fromIsoDate, minutesToTime, today } from "@/domain/time";
 import { db } from "@/lib/db";
 
@@ -58,6 +59,16 @@ function createRandom(seed: number): () => number {
   };
 }
 
+/**
+ * A real ISO 8601 instant, not a date and time glued together. The sync protocol validates
+ * timestamps strictly, and a string without a timezone is ambiguous — it was rejected by the
+ * server, which silently stopped the entire first push.
+ */
+function recordedAtFor(date: string, minute: number): string {
+  const [year, month, day] = date.split("-").map(Number);
+  return new Date(year, month - 1, day, 7, minute, 0).toISOString();
+}
+
 function clampMinute(minute: number): number {
   return Math.max(0, Math.min(23 * 60 + 59, minute));
 }
@@ -110,14 +121,22 @@ async function seedWithinTransaction(now: Date): Promise<boolean> {
   const createdAt = now.toISOString();
   const random = createRandom(20_240_617);
 
-  const sectionIds = await db().sections.bulkAdd(
-    SECTION_NAMES.map<New<Section>>((name) => ({ name, archived: false, createdAt })),
-    { allKeys: true },
-  );
+  // Identifiers are minted here rather than assigned by storage, so the foreign keys below can
+  // be wired up before anything is written.
+  const sectionIds = SECTION_NAMES.map(() => newId());
+  const sections: Section[] = SECTION_NAMES.map((name, index) => ({
+    id: sectionIds[index],
+    name,
+    archived: false,
+    createdAt,
+    updatedAt: createdAt,
+  }));
+  await db().sections.bulkAdd(sections);
 
-  const students: New<Student>[] = ROSTER.map(([lastName, firstName, middleName, gender], index) => {
+  const students: Student[] = ROSTER.map(([lastName, firstName, middleName, gender], index) => {
     const sectionIndex = index < 18 ? 0 : 1;
     return {
+      id: newId(),
       sectionId: sectionIds[sectionIndex],
       studentNumber: `2024-${String(1001 + index).padStart(4, "0")}`,
       lastName,
@@ -126,6 +145,7 @@ async function seedWithinTransaction(now: Date): Promise<boolean> {
       gender,
       archived: false,
       createdAt,
+      updatedAt: createdAt,
     };
   });
   await db().students.bulkAdd(students);
@@ -133,8 +153,10 @@ async function seedWithinTransaction(now: Date): Promise<boolean> {
   // One window straddling the current moment, so the scanner demo actually records something,
   // and one fixed morning window that supplies the historical data.
   const currentMinute = now.getHours() * 60 + now.getMinutes();
-  const schedules: New<Schedule>[] = [
+  const scheduleIds = [newId(), newId(), newId()];
+  const schedules: Schedule[] = [
     {
+      id: scheduleIds[0],
       sectionId: sectionIds[0],
       title: "Morning Assembly",
       venue: "Quadrangle",
@@ -142,8 +164,10 @@ async function seedWithinTransaction(now: Date): Promise<boolean> {
       late: { start: "07:30", end: "08:00" },
       archived: false,
       createdAt,
+      updatedAt: createdAt,
     },
     {
+      id: scheduleIds[1],
       sectionId: sectionIds[0],
       title: "Homeroom (live demo)",
       venue: "Room 201",
@@ -157,8 +181,10 @@ async function seedWithinTransaction(now: Date): Promise<boolean> {
       },
       archived: false,
       createdAt,
+      updatedAt: createdAt,
     },
     {
+      id: scheduleIds[2],
       sectionId: sectionIds[1],
       title: "Morning Assembly",
       venue: "Quadrangle",
@@ -166,12 +192,13 @@ async function seedWithinTransaction(now: Date): Promise<boolean> {
       late: { start: "07:30", end: "08:00" },
       archived: false,
       createdAt,
+      updatedAt: createdAt,
     },
   ];
-  const scheduleIds = await db().schedules.bulkAdd(schedules, { allKeys: true });
+  await db().schedules.bulkAdd(schedules);
 
   // Four weeks of weekday history for the two Morning Assembly schedules.
-  const records: NewAttendanceRecord[] = [];
+  const records: AttendanceRecord[] = [];
   const schoolDays: { date: string; firstSeenAt: string }[] = [];
   const start = addDays(today(now), -27);
 
@@ -192,13 +219,14 @@ async function seedWithinTransaction(now: Date): Promise<boolean> {
         const roll = random();
         const status = roll < 0.86 ? "present" : roll < 0.94 ? "late" : "absent";
         records.push({
+          id: newId(),
           scheduleId: scheduleIds[scheduleIndex],
           sectionId: student.sectionId,
           studentNumber: student.studentNumber,
           date,
           status,
           scheduleTitle: schedules[scheduleIndex].title,
-          recordedAt: `${date}T07:${String(Math.floor(random() * 55)).padStart(2, "0")}:00`,
+          recordedAt: recordedAtFor(date, Math.floor(random() * 55)),
         });
       }
     }

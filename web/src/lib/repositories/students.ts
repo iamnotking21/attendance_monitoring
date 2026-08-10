@@ -1,4 +1,5 @@
 import { fullName, studentInputSchema, type Student } from "@/domain/model";
+import { newId, now } from "@/domain/primitives";
 import { db } from "@/lib/db";
 
 export class DuplicateStudentNumberError extends Error {
@@ -8,7 +9,7 @@ export class DuplicateStudentNumberError extends Error {
   }
 }
 
-export async function listStudentsBySection(sectionId: number): Promise<Student[]> {
+export async function listStudentsBySection(sectionId: string): Promise<Student[]> {
   const students = await db().students.where({ sectionId }).toArray();
   return students
     .filter((student) => !student.archived)
@@ -20,7 +21,7 @@ export async function listAllStudents(): Promise<Student[]> {
   return students.filter((student) => !student.archived);
 }
 
-export async function countStudentsBySection(sectionId: number): Promise<number> {
+export async function countStudentsBySection(sectionId: string): Promise<number> {
   const students = await db().students.where({ sectionId }).toArray();
   return students.filter((student) => !student.archived).length;
 }
@@ -33,8 +34,9 @@ export async function findActiveByStudentNumber(
   return matches.find((student) => !student.archived);
 }
 
-export async function createStudent(input: unknown): Promise<number> {
+export async function createStudent(input: unknown): Promise<string> {
   const student = studentInputSchema.parse(input);
+  const timestamp = now();
 
   return db().transaction("rw", db().students, async () => {
     if (await isStudentNumberTaken(student.studentNumber)) {
@@ -42,25 +44,27 @@ export async function createStudent(input: unknown): Promise<number> {
     }
     return db().students.add({
       ...student,
+      id: newId(),
       archived: false,
-      createdAt: new Date().toISOString(),
+      createdAt: timestamp,
+      updatedAt: timestamp,
     });
   });
 }
 
-export async function updateStudent(id: number, input: unknown): Promise<void> {
+export async function updateStudent(id: string, input: unknown): Promise<void> {
   const student = studentInputSchema.parse(input);
 
   await db().transaction("rw", db().students, async () => {
     if (await isStudentNumberTaken(student.studentNumber, id)) {
       throw new DuplicateStudentNumberError(student.studentNumber);
     }
-    await db().students.update(id, student);
+    await db().students.update(id, { ...student, updatedAt: now() });
   });
 }
 
-export async function archiveStudent(id: number): Promise<void> {
-  await db().students.update(id, { archived: true });
+export async function archiveStudent(id: string): Promise<void> {
+  await db().students.update(id, { archived: true, updatedAt: now() });
 }
 
 /**
@@ -80,7 +84,7 @@ export function searchStudents(students: readonly Student[], query: string): Stu
 
 async function isStudentNumberTaken(
   studentNumber: string,
-  exceptId?: number,
+  exceptId?: string,
 ): Promise<boolean> {
   const matches = await db().students.where({ studentNumber }).toArray();
   return matches.some((student) => !student.archived && student.id !== exceptId);

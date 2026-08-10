@@ -1,0 +1,28 @@
+{
+  "name": "attendance-monitoring",
+  "version": "1.0.0",
+  "private": true,
+  "description": "QR-code attendance for schools. Offline-first web app with optional multi-device sync.",
+  "license": "MIT",
+  "workspaces": [
+    "web",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w web",
+    "build": "npm run build -w web",
+    "lint": "npm run lint -w web",
+    "typecheck": "npm run typecheck -w web && npm run typecheck -w @attendance/sync",
+    "test": "npm run test:run -w web && npm run test -w @attendance/sync",
+    "test:e2e": "npm run test:e2e -w web",
+    "db:migrate": "npm run migrate -w @attendance/sync",
+    "db:up": "docker compose -f devops/compose.dev.yaml up -d",
+    "db:down": "docker compose -f devops/compose.dev.yaml down -v"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "devDependencies": {
+    "jsdom": "^30.0.1"
+  }
+}

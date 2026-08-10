@@ -10,8 +10,8 @@ export function SectionPicker({
   label = "Section",
 }: {
   sections: Section[];
-  value: number | undefined;
-  onChange: (id: number) => void;
+  value: string | undefined;
+  onChange: (id: string) => void;
   label?: string;
 }) {
   return (
@@ -19,7 +19,7 @@ export function SectionPicker({
       <span className="sr-only sm:not-sr-only sm:text-muted">{label}</span>
       <SelectInput
         value={value ?? ""}
-        onChange={(event) => onChange(Number(event.target.value))}
+        onChange={(event) => onChange(event.target.value)}
         className="w-auto min-w-44"
         aria-label={label}
       >

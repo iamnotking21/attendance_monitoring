@@ -14,12 +14,15 @@ recorded it.
 ## Repository layout
 
 ```
-web/             Next.js 16 web application — the current product
-mobile-android/  The original Android app, preserved as reference. Not built by CI.
-devops/          Dockerfile and compose
-docs/            Security audit, performance measurements
+web/             Next.js 16 application — the product
+backend/         Sync server: Postgres schema, workspace auth, replication
+mobile-android/  The original Android app. Kept as reference; it cannot be built today.
+devops/          Dockerfile and compose files
+docs/            Sync architecture, security audit, performance, development notes
 .claude/         Specialist agent definitions, domain reference, and the ship pipeline
 ```
+
+An npm workspace repo: install once from the root and it covers both packages.
 
 ## The domain
 
@@ -49,6 +52,28 @@ Three invariants carry the whole design:
 
 Full rules: [`.claude/skills/attendance-domain/SKILL.md`](.claude/skills/attendance-domain/SKILL.md)
 
+## Offline and multi-device
+
+The app works with no server at all — that is the normal case, not a fallback. Every screen reads
+and writes the device's own IndexedDB, and a service worker caches the application itself, so
+after one online visit it opens and works with the network switched off. Verified by killing the
+server, reloading, recording a scan, and reading a four-week report.
+
+Connecting a workspace adds replication on top. One device creates a workspace and gets a join
+code; others enrol with it and receive their own tokens. Changes are pushed and pulled against a
+Postgres relay; the device's copy stays the source of truth throughout.
+
+Conflicts resolve by last-write-wins per row with a deterministic tiebreak, so every replica
+reaches the same answer without coordinating. Attendance records never conflict at all: they are
+append-only and deduplicated by (student, schedule, date), enforced by a unique index on both
+sides. Two phones scanning the same badge offline produce one record.
+
+Sync is optional. With no `DATABASE_URL` configured the deployment is offline-only and says so
+plainly, rather than showing buttons that fail when pressed.
+
+Full design, including why the pull cursor is a database sequence rather than a timestamp:
+[`docs/sync.md`](docs/sync.md).
+
 ## Architecture
 
 ```
@@ -67,7 +92,7 @@ tests that fail if the rule changes.
 ## Running it
 
 ```bash
-cd web && npm ci && npm run dev
+npm install && npm run dev
 ```
 
 | Command | What it does |
@@ -76,7 +101,8 @@ cd web && npm ci && npm run dev
 | `npm run build` | production build |
 | `npm run typecheck` | TypeScript, no emit |
 | `npm run lint` | ESLint |
-| `npm run test:run` | 139 unit and integration tests |
+| `npm test` | 153 web tests plus 21 backend tests |
+| `npm run db:up` | local Postgres, for developing sync |
 | `npm run test:e2e` | 16 Playwright journeys, desktop and mobile |
 
 ### Docker
@@ -94,31 +120,41 @@ drops all capabilities.
 
 | | |
 |---|---|
-| Unit and integration | 139 tests, Vitest with fake-indexeddb |
+| Unit and integration | 153 web tests (Vitest, fake-indexeddb) plus 21 backend tests against real Postgres |
 | End to end | 16 Playwright journeys across Chromium desktop and a Pixel 5 profile |
-| Dependency advisories | 0, `npm audit` including dev dependencies |
+| Dependency advisories | 0 across both workspaces, dev dependencies included |
 | Security headers | CSP with `default-src 'none'`, HSTS, `frame-ancestors 'none'`, camera-only permissions policy |
 | First load | 299 kB JS compressed, then 6–8 kB per subsequent route |
 
 Details: [`docs/security-audit.md`](docs/security-audit.md) and
-[`docs/performance.md`](docs/performance.md).
+[`docs/performance.md`](docs/performance.md), [`docs/sync.md`](docs/sync.md), and
+[`docs/development.md`](docs/development.md).
 
 Before any commit or deploy, [`.claude/skills/ship-pipeline`](.claude/skills/ship-pipeline/SKILL.md)
 defines seven ordered gates and which specialist agent owns each failure.
 
 ## Why local-first
 
-The original app kept everything in SQLite on the phone. The web rebuild keeps that shape rather
-than adding a server, and the reason is the data: a roster of minors' names and their daily
-movements. With no backend there is no database to breach, no session to steal, no third party to
-trust, and no hosting bill — the app works offline and costs nothing to run. The trade is real
-and stated plainly in the UI: data lives in one browser, so the Data screen makes backup, restore,
-and erasure first-class operations.
+The original app kept everything in SQLite on the phone. The web rebuild keeps that shape, and
+the reason is the data: a roster of minors' names and their daily movements. With the device as
+the source of truth, the app works in a corridor with no signal, costs nothing to run, and has no
+session to steal.
+
+Sync was added on top rather than underneath. It is optional, and turning it off returns the app
+to exactly the local-only behaviour above — no screen depends on it. What it costs is stated
+plainly in the UI: a workspace join code grants full access to that school's data, and anyone
+holding it can enrol a device.
+
+The trade that remains is storage: data lives in one browser unless a workspace is connected, so
+the Data screen makes backup, restore, and erasure first-class operations.
 
 ## Legacy app
 
-`mobile-android/` is the original project — Gradle 5.4.1, Java, SQLite, ZXing. It is kept as
-reference for how the rules were originally expressed and is not part of the build.
+`mobile-android/` is the original 2019 project — Gradle 5.4.1, Java, SQLite, ZXing. Kept as
+reference, not part of the build, and it cannot be built today: it resolves dependencies from
+JCenter, which was sunset in 2021, and every alarm it schedules would crash on Android 12 or later
+for want of a `PendingIntent` mutability flag. The full assessment, including two security
+findings in the original code, is in [`docs/android-legacy.md`](docs/android-legacy.md).
 
 ## License
 

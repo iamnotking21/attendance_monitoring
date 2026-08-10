@@ -3,6 +3,7 @@
 import {
   CalendarClock,
   Database,
+  RefreshCw,
   LayoutDashboard,
   QrCode,
   ScrollText,
@@ -30,6 +31,7 @@ const NAV: NavItem[] = [
   { href: "/schedules", label: "Schedules", short: "Sched", icon: CalendarClock },
   { href: "/reports", label: "Reports", short: "Report", icon: ScrollText },
   { href: "/data", label: "Data", short: "Data", icon: Database },
+  { href: "/sync", label: "Sync", short: "Sync", icon: RefreshCw },
 ];
 
 function isActive(pathname: string, href: string): boolean {
@@ -101,7 +103,7 @@ function SideNav({ pathname }: { pathname: string }) {
       </ul>
 
       <p className="mt-auto px-3 text-xs leading-relaxed text-subtle">
-        Data stays on this device. Nothing is uploaded.
+        Works offline. Data stays on this device unless you connect a workspace.
       </p>
     </nav>
   );

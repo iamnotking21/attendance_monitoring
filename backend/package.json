@@ -1,0 +1,30 @@
+{
+  "name": "@attendance/sync",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sync server for Attendance Monitoring: workspace auth, change replication, Postgres schema.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./protocol": "./src/protocol.ts",
+    "./schema": "./src/schema.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "migrate": "tsx src/migrate.ts"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.44.7",
+    "postgres": "^3.4.7",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5",
+    "vitest": "^4.1.10"
+  }
+}

@@ -29,6 +29,7 @@ import {
   searchStudents,
 } from "@/lib/repositories/students";
 
+import { IDS } from "../fixtures";
 import { closeDatabase, freshDatabase } from "../helpers/db";
 
 let database: AttendanceDatabase;
@@ -98,7 +99,7 @@ describe("sections", () => {
 });
 
 describe("students", () => {
-  let sectionId: number;
+  let sectionId: string;
 
   beforeEach(async () => {
     sectionId = await createSection({ name: "Grade 11 - Rizal" });
@@ -127,7 +128,7 @@ describe("students", () => {
     const id = await createStudent(student());
     await archiveStudent(id);
 
-    await expect(createStudent(student({ lastName: "Santos" }))).resolves.toBeGreaterThan(0);
+    await expect(createStudent(student({ lastName: "Santos" }))).resolves.toEqual(expect.any(String));
   });
 
   it("does not resolve an archived student from a scan", async () => {
@@ -181,8 +182,8 @@ describe("schedules", () => {
 
 describe("records", () => {
   const record = {
-    scheduleId: 1,
-    sectionId: 1,
+    scheduleId: IDS.schedule,
+    sectionId: IDS.section,
     studentNumber: "2024-1001",
     date: "2024-03-15",
     status: "present" as const,
@@ -214,7 +215,7 @@ describe("records", () => {
     await appendRecords([
       record,
       { ...record, date: "2024-03-16" },
-      { ...record, scheduleId: 2 },
+      { ...record, scheduleId: IDS.scheduleB },
     ]);
     expect(await database.records.count()).toBe(3);
   });
@@ -224,18 +225,18 @@ describe("records", () => {
       record,
       { ...record, date: "2024-03-16" },
       { ...record, date: "2024-03-20" },
-      { ...record, sectionId: 2, date: "2024-03-16" },
+      { ...record, sectionId: IDS.sectionB, date: "2024-03-16" },
     ]);
 
-    expect(await listRecordsBySectionAndDate(1, "2024-03-16")).toHaveLength(1);
-    expect(await listRecordsBySectionBetween(1, "2024-03-15", "2024-03-16")).toHaveLength(2);
-    expect(await listRecordsBySectionBetween(1, "2024-03-15", "2024-03-20")).toHaveLength(3);
+    expect(await listRecordsBySectionAndDate(IDS.section, "2024-03-16")).toHaveLength(1);
+    expect(await listRecordsBySectionBetween(IDS.section, "2024-03-15", "2024-03-16")).toHaveLength(2);
+    expect(await listRecordsBySectionBetween(IDS.section, "2024-03-15", "2024-03-20")).toHaveLength(3);
   });
 
   it("builds the duplicate-check key set for a date", async () => {
     await appendRecords([record]);
     const keys = await existingKeysForDate("2024-03-15");
-    expect(keys.has("2024-1001|1|2024-03-15")).toBe(true);
+    expect(keys.has(`2024-1001|${IDS.schedule}|2024-03-15`)).toBe(true);
   });
 });
 

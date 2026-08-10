@@ -73,6 +73,10 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
 
+  // The sync package ships TypeScript source from the workspace rather than a build artifact,
+  // so Next.js compiles it alongside the app.
+  transpilePackages: ["@attendance/sync"],
+
   // Import only the icons actually referenced, instead of the whole lucide barrel.
   experimental: {
     optimizePackageImports: ["lucide-react"],
@@ -83,6 +87,15 @@ const nextConfig: NextConfig = {
       { source: "/:path*", headers: SECURITY_HEADERS },
       // `/_next/static` is deliberately left alone: Next.js already serves it content-hashed
       // and immutable, and overriding it breaks the dev server's own cache behaviour.
+      {
+        // The worker must be revalidated on every load, or a stale copy pins the app to an old
+        // caching strategy indefinitely.
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=0, must-revalidate" },
+          { key: "Service-Worker-Allowed", value: "/" },
+        ],
+      },
       {
         source: "/icon.svg",
         headers: [

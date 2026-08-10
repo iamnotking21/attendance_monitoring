@@ -60,8 +60,27 @@ export const studentNumberSchema = z
       ),
   );
 
-export const idSchema = z.number().int().positive();
+/**
+ * Identifiers are UUIDs, not auto-incrementing integers.
+ *
+ * Two phones recording attendance offline would both mint section 3, and the moment they synced
+ * one would silently overwrite the other. A UUID is generated on the device that creates the
+ * row and never changes, so a record means the same thing on every device and on the server.
+ */
+export const idSchema = z.uuid();
+
+/** Timestamp of the last write, in ISO 8601. The tiebreaker when two devices edit one row. */
+export const timestampSchema = z.iso.datetime();
+
+export function newId(): string {
+  return globalThis.crypto.randomUUID();
+}
+
+export function now(at: Date = new Date()): string {
+  return at.toISOString();
+}
 
 export type IsoDate = z.infer<typeof isoDateSchema>;
 export type Time24 = z.infer<typeof time24Schema>;
 export type Id = z.infer<typeof idSchema>;
+export type Timestamp = z.infer<typeof timestampSchema>;

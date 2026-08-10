@@ -7,6 +7,7 @@ import {
   optionalDisplayText,
   studentNumberSchema,
   time24Schema,
+  timestampSchema,
 } from "./primitives";
 
 /**
@@ -14,7 +15,7 @@ import {
  * keeping the two shapes distinct means a value that was never written can never be mistaken
  * for one that was.
  */
-export type New<T extends { id: number }> = Omit<T, "id">;
+export type New<T extends { id: string }> = Omit<T, "id">;
 
 export const GENDERS = ["male", "female"] as const;
 export const genderSchema = z.enum(GENDERS);
@@ -30,7 +31,9 @@ export const sectionSchema = z.object({
   id: idSchema,
   name: displayText("Section name", 80),
   archived: z.boolean().default(false),
-  createdAt: z.string(),
+  createdAt: timestampSchema,
+  /** Last local write. Drives last-write-wins when two devices edit the same row. */
+  updatedAt: timestampSchema,
 });
 export type Section = z.infer<typeof sectionSchema>;
 
@@ -48,7 +51,9 @@ export const studentSchema = z.object({
   middleName: optionalDisplayText("Middle name", 60),
   gender: genderSchema,
   archived: z.boolean().default(false),
-  createdAt: z.string(),
+  createdAt: timestampSchema,
+  /** Last local write. Drives last-write-wins when two devices edit the same row. */
+  updatedAt: timestampSchema,
 });
 export type Student = z.infer<typeof studentSchema>;
 
@@ -86,7 +91,9 @@ export const scheduleSchema = z.object({
   present: timeWindowSchema,
   late: timeWindowSchema,
   archived: z.boolean().default(false),
-  createdAt: z.string(),
+  createdAt: timestampSchema,
+  /** Last local write. Drives last-write-wins when two devices edit the same row. */
+  updatedAt: timestampSchema,
 });
 export type Schedule = z.infer<typeof scheduleSchema>;
 
@@ -110,7 +117,7 @@ export const attendanceRecordSchema = z.object({
   status: attendanceStatusSchema,
   /** Denormalised so a report stays truthful after a schedule is renamed or archived. */
   scheduleTitle: z.string(),
-  recordedAt: z.string(),
+  recordedAt: timestampSchema,
 });
 export type AttendanceRecord = z.infer<typeof attendanceRecordSchema>;
 export type NewAttendanceRecord = New<AttendanceRecord>;
@@ -130,6 +137,6 @@ export function recordKey(
  */
 export const schoolDaySchema = z.object({
   date: isoDateSchema,
-  firstSeenAt: z.string(),
+  firstSeenAt: timestampSchema,
 });
 export type SchoolDay = z.infer<typeof schoolDaySchema>;

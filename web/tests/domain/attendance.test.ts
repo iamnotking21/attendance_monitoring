@@ -10,7 +10,7 @@ import {
 } from "@/domain/attendance";
 import { recordKey } from "@/domain/model";
 
-import { AT, makeSchedule } from "../fixtures";
+import { AT, IDS, makeSchedule } from "../fixtures";
 
 const RECORDED_AT = "2024-03-15T07:15:00.000Z";
 const DATE = "2024-03-15";
@@ -94,8 +94,8 @@ describe("resolveScan", () => {
     expect(result.created).toHaveLength(1);
     expect(result.created[0]).toMatchObject({
       status: "present",
-      scheduleId: 1,
-      sectionId: 1,
+      scheduleId: IDS.schedule,
+      sectionId: IDS.section,
       studentNumber: "2024-1001",
       date: DATE,
       scheduleTitle: "Morning Assembly",
@@ -117,13 +117,13 @@ describe("resolveScan", () => {
     for (const minute of [AT.before, AT.after]) {
       const result = resolveScan({ ...base, schedules: [makeSchedule()], atMinutes: minute });
       expect(result.created).toEqual([]);
-      expect(result.inactiveScheduleIds).toEqual([1]);
+      expect(result.inactiveScheduleIds).toEqual([IDS.schedule]);
     }
   });
 
   it("suppresses a second scan for a schedule already recorded today", () => {
     const existing = new Set([
-      recordKey({ studentNumber: "2024-1001", scheduleId: 1, date: DATE }),
+      recordKey({ studentNumber: "2024-1001", scheduleId: IDS.schedule, date: DATE }),
     ]);
 
     const result = resolveScan({
@@ -134,12 +134,12 @@ describe("resolveScan", () => {
     });
 
     expect(result.created).toEqual([]);
-    expect(result.duplicateScheduleIds).toEqual([1]);
+    expect(result.duplicateScheduleIds).toEqual([IDS.schedule]);
   });
 
   it("does not suppress the same student on a different day", () => {
     const existing = new Set([
-      recordKey({ studentNumber: "2024-1001", scheduleId: 1, date: "2024-03-14" }),
+      recordKey({ studentNumber: "2024-1001", scheduleId: IDS.schedule, date: "2024-03-14" }),
     ]);
 
     const result = resolveScan({
@@ -156,8 +156,8 @@ describe("resolveScan", () => {
     const result = resolveScan({
       ...base,
       schedules: [
-        makeSchedule({ id: 1, title: "Assembly" }),
-        makeSchedule({ id: 2, title: "Homeroom" }),
+        makeSchedule({ id: IDS.schedule, title: "Assembly" }),
+        makeSchedule({ id: IDS.scheduleB, title: "Homeroom" }),
       ],
       atMinutes: AT.presentMiddle,
     });
@@ -172,22 +172,22 @@ describe("resolveScan", () => {
     // Already marked present for the assembly; homeroom is open and still unrecorded, so this
     // scan must record homeroom without touching the assembly.
     const existing = new Set([
-      recordKey({ studentNumber: "2024-1001", scheduleId: 1, date: DATE }),
+      recordKey({ studentNumber: "2024-1001", scheduleId: IDS.schedule, date: DATE }),
     ]);
 
     const result = resolveScan({
       ...base,
       existingKeys: existing,
       schedules: [
-        makeSchedule({ id: 1, title: "Assembly" }),
-        makeSchedule({ id: 2, title: "Homeroom" }),
+        makeSchedule({ id: IDS.schedule, title: "Assembly" }),
+        makeSchedule({ id: IDS.scheduleB, title: "Homeroom" }),
       ],
       atMinutes: AT.presentMiddle,
     });
 
-    expect(result.duplicateScheduleIds).toEqual([1]);
+    expect(result.duplicateScheduleIds).toEqual([IDS.schedule]);
     expect(result.created).toHaveLength(1);
-    expect(result.created[0].scheduleId).toBe(2);
+    expect(result.created[0].scheduleId).toBe(IDS.scheduleB);
   });
 
   it("ignores archived schedules entirely", () => {
@@ -222,7 +222,7 @@ describe("absentRecordsFor", () => {
 
   it("skips students who already have a record", () => {
     const existingKeys = new Set([
-      recordKey({ studentNumber: "2024-1002", scheduleId: 1, date: DATE }),
+      recordKey({ studentNumber: "2024-1002", scheduleId: IDS.schedule, date: DATE }),
     ]);
 
     const absentees = absentRecordsFor({ ...base, existingKeys, atMinutes: AT.after });
