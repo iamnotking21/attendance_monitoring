@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/boys_name"
+        android:layout_width="100dp"
+        android:layout_height="50dp"
+        android:text="TextView"
+        android:textSize="13dp"
+        android:maxLines="1"
+        android:layout_marginTop="28dp"
+        android:fontFamily="@font/mandali"
+        />
+
+    <TextView
+        android:id="@+id/present"
+        android:layout_width="70dp"
+        android:layout_height="66dp"
+        android:textSize="10dp"
+        android:maxLines="2"
+        android:fontFamily="@font/mandali" />
+
+
+    <TextView
+        android:id="@+id/late"
+        android:layout_width="60dp"
+        android:layout_height="66dp"
+        android:textSize="10dp"
+        android:maxLines="2"
+        android:fontFamily="@font/mandali" />
+
+
+    <TextView
+        android:id="@+id/absent"
+        android:layout_width="70dp"
+        android:layout_height="66dp"
+        android:textSize="10dp"
+        android:maxLines="2"
+        android:fontFamily="@font/mandali" />
+
+</LinearLayout>

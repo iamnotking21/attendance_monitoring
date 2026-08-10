@@ -1,0 +1,77 @@
+---
+name: ship-pipeline
+description: The synchronized quality gate for this repository — run it before any commit, Docker build, or Vercel deploy. Defines gate order, pass criteria, and which specialist agent owns each failure. Trigger on "ship it", "is this ready", "run the pipeline", or before deploying.
+---
+
+# Ship pipeline
+
+Gates run **in order**. A failed gate stops the pipeline; it is not deferred. Each gate names
+the agent that owns its failures.
+
+## Gate 0 — Static integrity
+
+```bash
+npm run typecheck && npm run lint
+```
+
+Pass: zero TypeScript errors, zero ESLint errors. Warnings are read and either fixed or
+justified in writing. Owner: `architecture-refactorer`.
+
+## Gate 1 — Correctness
+
+```bash
+npm run test -- --run
+```
+
+Pass: all unit and integration tests green. Domain rules — window state machine, duplicate-scan
+suppression, absentee sweep, date-range reporting — must each have a test that fails when the
+rule is broken. Owner: `qa-docker-engineer`.
+
+## Gate 2 — Security
+
+```bash
+npm audit --omit=dev
+git grep -nIE "(api[_-]?key|secret|password|token)\s*[:=]\s*['\"][^'\"]{8,}"
+```
+
+Pass: no committed secrets, no unvalidated external input reaching storage, security headers
+present in `next.config.ts`, no exploitable advisory. Owner: `security-auditor`.
+
+## Gate 3 — Build and performance budget
+
+```bash
+npm run build
+```
+
+Pass: build succeeds; every route's First Load JS under 160 kB; shared chunk under 110 kB;
+camera, QR, and spreadsheet code confirmed absent from the shared chunk. Owner:
+`performance-optimizer`.
+
+## Gate 4 — Runtime and responsive
+
+Start the app, then at 375 / 768 / 1280 px: visit every route, confirm zero console errors,
+confirm no horizontal body scroll, exercise one real interaction per route. Owner:
+`ui-ux-engineer`.
+
+## Gate 5 — Container
+
+```bash
+docker build -f devops/Dockerfile -t attendance-web .
+docker run --rm -p 3000:3000 attendance-web
+```
+
+Pass: image builds, container runs as non-root, health endpoint returns 200, one real page
+renders. Report image size. Owner: `qa-docker-engineer`.
+
+## Gate 6 — Deploy
+
+Preview deploy → verify live URL in a browser → promote to production. Requires explicit user
+confirmation; production deployment is outward-facing. Owner: `deploy-engineer`.
+
+## Synchronization rules
+
+- Gates 0–3 may be prepared in parallel but must be **reported** in order. A green Gate 3 on top
+  of a red Gate 1 is meaningless.
+- Any fix applied at gate *n* re-runs gates `0..n`. Fixes invalidate earlier evidence.
+- Evidence is real command output. "Should pass" fails the gate.
+- If a gate cannot run, it is a failure, not a skip. Say which gate and why.
