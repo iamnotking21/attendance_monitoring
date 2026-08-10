@@ -57,3 +57,7 @@ desktop.ini
 .claude/settings.local.json
 
 .vercel
+
+# ---- Android (new Kotlin app) ----
+mobile-android/.kotlin/
+mobile-android/app/schemas/*.json.bak

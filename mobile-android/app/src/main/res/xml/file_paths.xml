@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Exports are written here and shared through the system sheet, so the app needs no
+         storage permission and no file leaves the sandbox without the user choosing where. -->
+    <cache-path name="exports" path="exports/" />
+</paths>

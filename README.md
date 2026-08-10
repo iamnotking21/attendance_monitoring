@@ -14,13 +14,19 @@ recorded it.
 ## Repository layout
 
 ```
-web/             Next.js 16 application — the product
+web/             Next.js 16 application
 backend/         Sync server: Postgres schema, workspace auth, replication
-mobile-android/  The original Android app. Kept as reference; it cannot be built today.
+mobile-android/  Android app — Kotlin, Jetpack Compose, Room
+legacy-android/  The original 2019 Java app. Reference only; it cannot be built today.
 devops/          Dockerfile and compose files
 docs/            Sync architecture, security audit, performance, development notes
 .claude/         Specialist agent definitions, domain reference, and the ship pipeline
 ```
+
+Three clients, one set of rules. The attendance domain — the present/late window state machine,
+duplicate suppression, the absentee sweep — exists twice, in TypeScript under `web/src/domain`
+and in Kotlin under `mobile-android/app/src/main/java/ph/attendance/domain`, with both test
+suites asserting the same boundaries. They meet at the sync protocol in `backend/`.
 
 An npm workspace repo: install once from the root and it covers both packages.
 
@@ -139,9 +145,9 @@ Step by step, including troubleshooting: [`docs/docker.md`](docs/docker.md).
 | Security headers | CSP with `default-src 'none'`, HSTS, `frame-ancestors 'none'`, camera-only permissions policy |
 | First load | 299 kB JS compressed, then 6–8 kB per subsequent route |
 
-Details: [`docs/security-audit.md`](docs/security-audit.md) and
-[`docs/performance.md`](docs/performance.md), [`docs/sync.md`](docs/sync.md), and
-[`docs/development.md`](docs/development.md).
+Details: [`docs/security-audit.md`](docs/security-audit.md), [`docs/performance.md`](docs/performance.md),
+[`docs/sync.md`](docs/sync.md), [`docs/mobile-android.md`](docs/mobile-android.md),
+[`docs/docker.md`](docs/docker.md), and [`docs/development.md`](docs/development.md).
 
 Before any commit or deploy, [`.claude/skills/ship-pipeline`](.claude/skills/ship-pipeline/SKILL.md)
 defines seven ordered gates and which specialist agent owns each failure.
@@ -161,9 +167,22 @@ holding it can enrol a device.
 The trade that remains is storage: data lives in one browser unless a workspace is connected, so
 the Data screen makes backup, restore, and erasure first-class operations.
 
+## Android
+
+`mobile-android/` is a Kotlin and Jetpack Compose app: Room for storage, CameraX with ML Kit for
+scanning, and the same sync protocol the web client speaks. Its `domain/` package is the Kotlin
+twin of `web/src/domain`, with 56 unit tests asserting the same rules.
+
+```bash
+cd mobile-android && ./gradlew assembleDebug testDebugUnitTest lintDebug
+```
+
+Details, including why the version matrix is deliberately not the newest:
+[`docs/mobile-android.md`](docs/mobile-android.md).
+
 ## Legacy app
 
-`mobile-android/` is the original 2019 project — Gradle 5.4.1, Java, SQLite, ZXing. Kept as
+`legacy-android/` is the original 2019 project — Gradle 5.4.1, Java, SQLite, ZXing. Kept as
 reference, not part of the build, and it cannot be built today: it resolves dependencies from
 JCenter, which was sunset in 2021, and every alarm it schedules would crash on Android 12 or later
 for want of a `PendingIntent` mutability flag. The full assessment, including two security

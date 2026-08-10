@@ -1,6 +1,9 @@
 # The legacy Android app
 
-Assessed 2026-08-10 · `mobile-android/` · Java, Gradle 5.4.1, AGP 3.5.1, SQLite, ZXing
+> Lives in `legacy-android/`. The current Android app is a Kotlin and Compose rewrite in
+> `mobile-android/` — see [mobile-android.md](mobile-android.md).
+
+Assessed 2026-08-10 · `legacy-android/` · Java, Gradle 5.4.1, AGP 3.5.1, SQLite, ZXing
 
 ## Verdict
 
@@ -94,13 +97,11 @@ warning rather than answering it.
 | String-concatenated SQL | Parameterised queries and Zod-validated input |
 | Exported receivers | No IPC surface at all; the browser is the sandbox |
 
-## If it ever needs to run again
+## The rewrite
 
-The honest estimate is a rewrite, not an upgrade: Gradle and AGP to current, JCenter to Maven
-Central, `targetSdk` to current with scoped storage and runtime permissions, every `PendingIntent`
-given a mutability flag, all receivers unexported, and the alarm scheduling replaced with
-`WorkManager`. At that point the only thing left of the original would be the layouts and the
-business rules — and the business rules already have a tested home in `web/src/domain/`.
+It happened. `mobile-android/` is a Kotlin and Compose app on a current toolchain, built from the
+same domain rules, with every finding above closed: no exported receivers, no string-built SQL,
+two permissions instead of six, and no alarms to re-arm. See
+[mobile-android.md](mobile-android.md).
 
-A better use of the same effort is the web app on the same phones: it installs to the home
-screen, works offline, uses the camera for scanning, and syncs when a network appears.
+This directory stays as the record of where those rules came from.

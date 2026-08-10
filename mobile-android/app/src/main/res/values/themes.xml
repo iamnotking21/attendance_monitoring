@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Compose supplies the real theme. This exists only so the window has the right background
+        before the first frame — without it the app flashes white on launch in dark mode.
+        Platform Material rather than AppCompat: nothing here needs an AppCompat activity.
+    -->
+    <style name="Theme.Attendance" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+</resources>

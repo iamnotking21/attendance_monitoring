@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.attendance_monitoring">
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission
+        android:name="android.permission.WRITE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <application
+        android:requestLegacyExternalStorage="true"
+        android:allowBackup="true"
+        android:icon="@mipmap/pfnhs1_attendance"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/pfnhs1_attendance_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+
+        <receiver
+            android:name=".attendance_record"
+            android:enabled="true"
+            android:exported="true"></receiver>
+
+        <receiver
+            android:name=".end_sample_late"
+            android:enabled="true"
+            android:exported="true" />
+
+        <receiver
+            android:name=".start_sample_late"
+            android:enabled="true"
+            android:exported="true" />
+
+        <receiver
+            android:name=".end_sample"
+            android:enabled="true"
+            android:exported="true" />
+
+        <receiver
+            android:name=".sample"
+            android:enabled="true"
+            android:exported="true" />
+
+        <receiver
+            android:name=".CheckingTime"
+            android:enabled="true"
+            android:exported="true" />
+
+        <receiver
+            android:name=".start_late_receiver"
+            android:enabled="true"
+            android:exported="true" />
+
+        <receiver
+            android:name=".end_receiver"
+            android:enabled="true"
+            android:exported="true" />
+
+        <receiver
+            android:name=".backgroundservice"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".do_daily_receiver"
+            android:enabled="true"
+            android:exported="true" />
+
+        <receiver
+            android:name=".timer_start"
+            android:enabled="true"
+            android:exported="true" />
+
+        <activity android:name=".panel_main">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".panel_sample" />
+
+        <activity
+            android:name=".classess"
+            android:windowSoftInputMode="adjustResize|stateAlwaysHidden|stateVisible|adjustPan">
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
+        </activity>
+
+        <activity
+            android:name=".manage_classess_main"
+            android:windowSoftInputMode="adjustResize|stateAlwaysHidden|stateVisible|adjustPan">
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
+        </activity>
+
+        <activity android:name=".student_info_main" />
+
+        <activity android:name=".MainActivity"
+            android:windowSoftInputMode="adjustResize|stateAlwaysHidden|stateVisible|adjustPan">
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
+        </activity>
+
+        <activity android:name=".scanner_main" />
+
+        <activity
+            android:name=".schedule_main"
+            android:windowSoftInputMode="adjustResize|stateAlwaysHidden|stateVisible|adjustPan">
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
+        </activity>
+
+        <activity
+            android:name=".schedules_list_main"
+            android:windowSoftInputMode="adjustResize|stateAlwaysHidden|stateVisible|adjustPan" />
+
+        <activity android:name=".Report_Section_main"
+            android:windowSoftInputMode="adjustResize|stateAlwaysHidden|stateVisible|adjustPan"
+            >
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
+        </activity>
+
+        <activity android:name=".Attendance_record_summary_main"
+            android:windowSoftInputMode="adjustResize|stateAlwaysHidden|stateVisible|adjustPan"
+            >
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
+
+        </activity>
+
+        <activity android:name=".Database_main"
+            android:windowSoftInputMode="adjustResize|stateAlwaysHidden|stateVisible|adjustPan"
+            ></activity>
+
+    </application>
+
+</manifest>

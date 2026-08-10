@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!--
+        HTTPS only. Sync carries a bearer token and a roster of minors' names; sending either over
+        plain HTTP because someone typed a LAN address would be indefensible, so the platform
+        refuses it rather than relying on the developer to remember.
+    -->
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>

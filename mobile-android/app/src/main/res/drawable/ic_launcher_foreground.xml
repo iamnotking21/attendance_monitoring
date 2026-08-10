@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Three QR finder squares and a tick: scan, then recorded. -->
+    <group android:translateX="27" android:translateY="27">
+        <path android:fillColor="#FFFFFF" android:pathData="M4,4h14v14h-14z M8,8v6h6v-6z" />
+        <path android:fillColor="#FFFFFF" android:pathData="M36,4h14v14h-14z M40,8v6h6v-6z" />
+        <path android:fillColor="#FFFFFF" android:pathData="M4,36h14v14h-14z M8,40v6h6v-6z" />
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="5"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M32,43 l5,5 l13,-13" />
+    </group>
+</vector>
