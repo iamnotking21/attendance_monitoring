@@ -55,6 +55,9 @@ interface StudentDao {
     @Query("SELECT * FROM students WHERE archived = 0")
     suspend fun listActive(): List<StudentEntity>
 
+    @Query("SELECT * FROM students WHERE id = :id")
+    suspend fun byId(id: String): StudentEntity?
+
     @Query("SELECT * FROM students WHERE studentNumber = :studentNumber AND archived = 0 LIMIT 1")
     suspend fun activeByNumber(studentNumber: String): StudentEntity?
 
@@ -98,6 +101,12 @@ interface ScheduleDao {
 
     @Query("SELECT * FROM schedules WHERE sectionId = :sectionId AND archived = 0 ORDER BY presentStart")
     suspend fun listBySection(sectionId: String): List<ScheduleEntity>
+
+    @Query("SELECT * FROM schedules WHERE id = :id")
+    suspend fun byId(id: String): ScheduleEntity?
+
+    @Query("SELECT COUNT(*) FROM schedules WHERE archived = 0")
+    suspend fun countActive(): Int
 
     @Query("SELECT * FROM schedules WHERE archived = 0 ORDER BY presentStart")
     suspend fun listActive(): List<ScheduleEntity>

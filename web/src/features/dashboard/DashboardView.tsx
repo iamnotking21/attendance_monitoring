@@ -243,8 +243,10 @@ function RosterPanel({
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-ink">{row.name}</p>
-                      <p className="truncate font-mono text-xs text-subtle">
-                        {row.studentNumber} · {row.detail}
+                      <p className="font-mono text-xs text-subtle">
+                        <span className="block truncate sm:inline">{row.studentNumber}</span>
+                        <span aria-hidden className="hidden sm:inline"> · </span>
+                        <span className="block truncate sm:inline">{row.detail}</span>
                       </p>
                     </div>
                     {row.status ? <StatusBadge status={row.status} /> : null}

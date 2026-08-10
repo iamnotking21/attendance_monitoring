@@ -161,6 +161,14 @@ export async function push(
   }
 
   let applied = 0;
+  // The highest sequence this push wrote. Returning it from the upserts means the response
+  // cursor comes free, instead of costing five more index scans in a separate round trip.
+  let highestSeq = 0;
+
+  const track = (rows: { serverSeq: number }[]) => {
+    applied += rows.length;
+    for (const row of rows) if (row.serverSeq > highestSeq) highestSeq = row.serverSeq;
+  };
 
   await database.transaction(async (tx) => {
     if (changes.sections.length > 0) {
@@ -188,8 +196,8 @@ export async function push(
           setWhere: sql`excluded.updated_at > ${sections.updatedAt}
             OR (excluded.updated_at = ${sections.updatedAt} AND excluded.id > ${sections.id})`,
         })
-        .returning({ id: sections.id });
-      applied += written.length;
+        .returning({ serverSeq: sections.serverSeq });
+      track(written);
     }
 
     if (changes.schedules.length > 0) {
@@ -224,8 +232,8 @@ export async function push(
           setWhere: sql`excluded.updated_at > ${schedules.updatedAt}
             OR (excluded.updated_at = ${schedules.updatedAt} AND excluded.id > ${schedules.id})`,
         })
-        .returning({ id: schedules.id });
-      applied += written.length;
+        .returning({ serverSeq: schedules.serverSeq });
+      track(written);
     }
 
     if (changes.students.length > 0) {
@@ -262,8 +270,8 @@ export async function push(
           setWhere: sql`excluded.updated_at > ${students.updatedAt}
             OR (excluded.updated_at = ${students.updatedAt} AND excluded.id > ${students.id})`,
         })
-        .returning({ id: students.id });
-      applied += written.length;
+        .returning({ serverSeq: students.serverSeq });
+      track(written);
     }
 
     if (changes.records.length > 0) {
@@ -286,8 +294,8 @@ export async function push(
           })),
         )
         .onConflictDoNothing()
-        .returning({ id: records.id });
-      applied += written.length;
+        .returning({ serverSeq: records.serverSeq });
+      track(written);
     }
 
     if (changes.schoolDays.length > 0) {
@@ -301,15 +309,16 @@ export async function push(
           })),
         )
         .onConflictDoNothing()
-        .returning({ date: schoolDays.date });
-      applied += written.length;
+        .returning({ serverSeq: schoolDays.serverSeq });
+      track(written);
     }
   });
 
   return {
     applied,
     skipped: total - applied,
-    cursor: await currentCursor(workspaceId, database),
+    // Only fall back to querying when this push wrote nothing, which is the cheap case anyway.
+    cursor: highestSeq > 0 ? highestSeq : await currentCursor(workspaceId, database),
     serverTime: new Date().toISOString(),
   };
 }

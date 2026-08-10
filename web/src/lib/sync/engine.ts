@@ -94,11 +94,17 @@ async function pushLocalChanges(token: string, startedAt: string): Promise<numbe
   const watermark = await readPushWatermark();
   const database = db();
 
+  // Index ranges rather than `.filter()`. A filter reads every row and tests it in JavaScript,
+  // so on a school with a term of history the push path walked ~100k attendance records to find
+  // the handful written since the last sync. `where().above()` seeks straight to them.
+  //
+  // `schoolDays` keeps the scan: it is one row per school day, a few hundred at most, and it has
+  // no index on `firstSeenAt` to seek with.
   const [sections, students, schedules, records, schoolDays] = await Promise.all([
-    database.sections.filter((row) => row.updatedAt > watermark).toArray(),
-    database.students.filter((row) => row.updatedAt > watermark).toArray(),
-    database.schedules.filter((row) => row.updatedAt > watermark).toArray(),
-    database.records.filter((row) => row.recordedAt > watermark).toArray(),
+    database.sections.where("updatedAt").above(watermark).toArray(),
+    database.students.where("updatedAt").above(watermark).toArray(),
+    database.schedules.where("updatedAt").above(watermark).toArray(),
+    database.records.where("recordedAt").above(watermark).toArray(),
     database.schoolDays.filter((row) => row.firstSeenAt > watermark).toArray(),
   ]);
 

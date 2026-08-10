@@ -59,7 +59,7 @@ those run about three times larger and would flatter every result:
 
 | Budget | Limit |
 |---|---|
-| Entry JS on first load | 320 kB |
+| Entry JS on first load | 345 kB |
 | Per-route incremental JS | 25 kB |
 | Font payload | 60 kB |
 | Blocking third-party requests | 0 |

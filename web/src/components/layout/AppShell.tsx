@@ -46,7 +46,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <SideNav pathname={pathname} />
 
       <main className="flex-1 pb-20 lg:pb-0">
-        <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">{children}</div>
+        <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8 2xl:max-w-[88rem]">{children}</div>
       </main>
 
       <BottomNav pathname={pathname} />
@@ -116,11 +116,11 @@ function BottomNav({ pathname }: { pathname: string }) {
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 backdrop-blur lg:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <ul className="mx-auto flex max-w-lg">
+      <ul className="scroll-x mx-auto flex max-w-lg">
         {NAV.map((item) => {
           const active = isActive(pathname, item.href);
           return (
-            <li key={item.href} className="flex-1">
+            <li key={item.href} className="min-w-[3.25rem] flex-1">
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}

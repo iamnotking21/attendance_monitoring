@@ -76,7 +76,7 @@ export function Dialog({
           type="button"
           onClick={onClose}
           aria-label="Close dialog"
-          className="-mr-1 -mt-1 rounded-lg p-2 text-muted transition-colors hover:bg-primary-soft hover:text-ink"
+          className="-mr-2 -mt-2 grid size-11 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-ink"
         >
           <X aria-hidden className="size-4" />
         </button>

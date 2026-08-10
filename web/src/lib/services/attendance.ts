@@ -7,11 +7,7 @@ import {
 import type { NewAttendanceRecord, Schedule, Student } from "@/domain/model";
 import { studentNumberSchema } from "@/domain/primitives";
 import { minutesOfDay, today } from "@/domain/time";
-import {
-  appendRecords,
-  existingKeysForDate,
-  existingKeysForSchedule,
-} from "@/lib/repositories/records";
+import { appendRecords, existingKeysForSchedule } from "@/lib/repositories/records";
 import { listActiveSchedules, listSchedulesBySection } from "@/lib/repositories/schedules";
 import { markSchoolDay } from "@/lib/repositories/schoolDays";
 import { findActiveByStudentNumber, listStudentsBySection } from "@/lib/repositories/students";
@@ -52,10 +48,21 @@ export async function recordScan(payload: string, now: Date = new Date()): Promi
   const schedules = await listSchedulesBySection(student.sectionId);
   const atMinutes = minutesOfDay(now);
 
+  // Keys are gathered per schedule rather than for the whole day. Reading every record in the
+  // school to decide one student's duplicate status made each scan cost more as the school grew;
+  // this touches only the schedules the student is actually in, through the [scheduleId+date]
+  // index. At a gate, scan latency is the thing an operator feels.
+  const existingKeys = new Set<string>();
+  for (const keys of await Promise.all(
+    schedules.map((schedule) => existingKeysForSchedule(schedule.id, date)),
+  )) {
+    for (const key of keys) existingKeys.add(key);
+  }
+
   const resolution = resolveScan({
     studentNumber,
     schedules,
-    existingKeys: await existingKeysForDate(date),
+    existingKeys,
     date,
     atMinutes,
     recordedAt: now.toISOString(),

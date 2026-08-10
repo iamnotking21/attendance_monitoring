@@ -67,7 +67,7 @@ class AttendanceRepository(private val db: AttendanceDatabase) {
     suspend fun counts(): DataCounts = DataCounts(
         sections = db.sections().count(),
         students = db.students().count(),
-        schedules = db.schedules().listActive().size,
+        schedules = db.schedules().countActive(),
         records = db.records().count(),
         schoolDays = db.schoolDays().count(),
     )
@@ -147,7 +147,7 @@ class AttendanceRepository(private val db: AttendanceDatabase) {
 
         val now = Clocks.nowIso()
         val id = existingId ?: newId()
-        val createdAt = existingId?.let { db.students().all().firstOrNull { row -> row.id == it }?.createdAt } ?: now
+        val createdAt = existingId?.let { db.students().byId(it)?.createdAt } ?: now
 
         val student = Student(
             id = id,
@@ -180,7 +180,7 @@ class AttendanceRepository(private val db: AttendanceDatabase) {
 
         val now = Clocks.nowIso()
         val id = existingId ?: newId()
-        val createdAt = existingId?.let { db.schedules().all().firstOrNull { row -> row.id == it }?.createdAt } ?: now
+        val createdAt = existingId?.let { db.schedules().byId(it)?.createdAt } ?: now
 
         val schedule = Schedule(
             id = id,
@@ -226,7 +226,17 @@ class AttendanceRepository(private val db: AttendanceDatabase) {
 
         val schedules = db.schedules().listBySection(student.sectionId).map(ScheduleEntity::toDomain)
         val atMinutes = Clocks.minutesOfDay()
-        val existing = db.records().listByDate(date).map { it.toDomain().key() }.toSet()
+
+        // Keys per schedule rather than for the whole day. Reading every record in the school to
+        // decide one student's duplicate status made each scan cost more as the school grew; this
+        // touches only the schedules the student is in, through the (scheduleId, date) index.
+        // Scan latency is the one thing an operator at a gate actually feels.
+        val existing = buildSet {
+            for (schedule in schedules) {
+                db.records().listByScheduleAndDate(schedule.id, date)
+                    .forEach { add(it.toDomain().key()) }
+            }
+        }
 
         val resolution = resolveScan(
             ScanContext(studentNumber, schedules, existing, date, atMinutes, Clocks.nowIso()),
