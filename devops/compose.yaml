@@ -1,20 +1,66 @@
-# Run the production image locally:
-#   docker compose -f devops/compose.yaml up --build
+# The whole stack, one command:
 #
-# There is no database service, and that is not an omission: every attendance record lives in
-# the operator's own browser. The container serves static assets and nothing else, so it holds
-# no state worth persisting and no volume worth mounting.
+#   docker compose -f devops/compose.yaml up -d --build
+#   open http://localhost:3000
+#
+# Three services: Postgres, a one-shot migration job, and the web app. The app waits for the
+# migration to finish, and the migration waits for Postgres to report healthy, so a cold start
+# on a clean machine comes up in the right order without anyone having to sequence it by hand.
+#
+# Sync is optional. `docker compose -f devops/compose.yaml up -d web` starts the app alone;
+# without DATABASE_URL it runs offline-only, which is a fully working attendance system — the
+# device's own storage is the source of truth either way.
+
+name: attendance-monitoring
 
 services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: attendance
+      POSTGRES_PASSWORD: attendance-local-only
+      POSTGRES_DB: attendance
+    ports:
+      # Published so `npm run db:migrate` and the backend tests can reach it from the host.
+      - "55432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U attendance -d attendance"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  migrate:
+    build:
+      context: ..
+      dockerfile: devops/Dockerfile
+      target: migrator
+    image: attendance-migrate:local
+    environment:
+      DATABASE_URL: postgres://attendance:attendance-local-only@postgres:5432/attendance
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Runs to completion and stops. Migrations are recorded in schema_migrations, so repeating
+    # this is a no-op rather than an error.
+    restart: "no"
+
   web:
     build:
       context: ..
       dockerfile: devops/Dockerfile
+      target: runner
     image: attendance-web:local
     ports:
       - "3000:3000"
     environment:
       NODE_ENV: production
+      DATABASE_URL: postgres://attendance:attendance-local-only@postgres:5432/attendance
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     restart: unless-stopped
     read_only: true
     tmpfs:
@@ -33,3 +79,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+
+volumes:
+  postgres-data:

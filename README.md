@@ -107,14 +107,27 @@ npm install && npm run dev
 
 ### Docker
 
+The whole stack — Postgres, migrations, and the app — in one command:
+
+```bash
+npm run docker:up
+```
+
+Then open <http://localhost:3000>. Compose waits for Postgres to report healthy, runs the
+migration job to completion, and only then starts the app.
+
+App only, no database, no sync:
+
 ```bash
 docker build -f devops/Dockerfile -t attendance-web .
 docker run --rm -p 3000:3000 attendance-web
 ```
 
-Multi-stage build on `node:22-alpine`, running as a non-root user, with a healthcheck that
-probes the app rather than the port. `devops/compose.yaml` adds a read-only root filesystem and
-drops all capabilities.
+Multi-stage build on `node:22-alpine` (331 MB), running as a non-root user, with a healthcheck
+that probes the app rather than the port. Compose adds a read-only root filesystem, drops all
+capabilities, and sets `no-new-privileges`.
+
+Step by step, including troubleshooting: [`docs/docker.md`](docs/docker.md).
 
 ## Quality
 

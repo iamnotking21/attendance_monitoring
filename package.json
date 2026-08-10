@@ -16,10 +16,13 @@
     "test": "npm run test:run -w web && npm run test -w @attendance/sync",
     "test:e2e": "npm run test:e2e -w web",
     "db:migrate": "npm run migrate -w @attendance/sync",
-    "db:up": "docker compose -f devops/compose.dev.yaml up -d",
-    "db:down": "docker compose -f devops/compose.dev.yaml down -v",
     "check:lockfile": "node scripts/check-lockfile.mjs",
-    "lockfile:linux": "docker run --rm -v \"$PWD:/src\" node:22-alpine sh -c \"mkdir -p /gen/web /gen/backend && cp /src/package.json /gen/ && cp /src/web/package.json /gen/web/ && cp /src/backend/package.json /gen/backend/ && cd /gen && npm install --package-lock-only --no-audit --no-fund && cp package-lock.json /src/\""
+    "lockfile:linux": "docker run --rm -v \"$PWD:/src\" node:22-alpine sh -c \"mkdir -p /gen/web /gen/backend && cp /src/package.json /gen/ && cp /src/web/package.json /gen/web/ && cp /src/backend/package.json /gen/backend/ && cd /gen && npm install --package-lock-only --no-audit --no-fund && cp package-lock.json /src/\"",
+    "docker:up": "docker compose -f devops/compose.yaml up -d --build",
+    "docker:down": "docker compose -f devops/compose.yaml down",
+    "docker:logs": "docker compose -f devops/compose.yaml logs -f web",
+    "db:up": "docker compose -f devops/compose.dev.yaml up -d",
+    "db:down": "docker compose -f devops/compose.dev.yaml down -v"
   },
   "engines": {
     "node": ">=20.9.0"

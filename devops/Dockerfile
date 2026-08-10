@@ -43,6 +43,23 @@ COPY web ./web
 
 RUN npm run build -w web
 
+# ------------------------------------------------------------------- migrator
+# A one-shot image that applies the SQL migrations, used by compose before the web
+# service starts. Separate from the runner because the runtime image deliberately
+# carries no source, no TypeScript, and no database tooling.
+FROM node:22-alpine AS migrator
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json ./
+COPY backend ./backend
+
+RUN addgroup --system --gid 1001 nodejs \
+  && adduser --system --uid 1001 --ingroup nodejs migrate
+USER migrate
+
+CMD ["npm", "run", "migrate", "-w", "@attendance/sync"]
+
 # --------------------------------------------------------------------- runner
 FROM node:22-alpine AS runner
 WORKDIR /app
