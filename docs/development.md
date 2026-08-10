@@ -54,18 +54,25 @@ which is exactly how this broke.
 Regenerate with a clean tree inside Linux:
 
 ```bash
-docker run --rm -v "$PWD:/src" node:22-alpine sh -c 'mkdir -p /gen/web /gen/backend && cp /src/package.json /gen/ && cp /src/web/package.json /gen/web/ && cp /src/backend/package.json /gen/backend/ && cd /gen && npm install --package-lock-only --no-audit --no-fund && cp package-lock.json /src/'
+npm run lockfile:linux
 ```
 
 Copying the manifests into an empty directory is the part that matters: resolving inside the
 mounted repo would reuse the existing `node_modules` and reproduce the same platform-specific
-result. A correct lockfile contains roughly 48 platform binding entries — check before committing:
+result.
+
+Verify before committing:
 
 ```bash
-node -e "const l=require('./package-lock.json');console.log(Object.keys(l.packages).filter(k=>/(oxide|lightningcss|@next\/swc)-/.test(k)).length)"
+npm run check:lockfile
 ```
 
-Installing on Windows afterwards may add local entries. Do not commit that; regenerate instead.
+That check is part of the ship pipeline, because this has broken the Docker build twice — once
+from `npm dedupe`, once from a routine `npm install` on Windows. A paragraph in a document was
+not enough; the guard fails the build with the exact command needed to fix it.
+
+Installing on Windows afterwards is fine and normally leaves the Linux entries in place. `npm
+dedupe` is the one command that reliably destroys them — avoid it in this repo.
 
 ## Docker
 

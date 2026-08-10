@@ -17,12 +17,16 @@
     "test:e2e": "npm run test:e2e -w web",
     "db:migrate": "npm run migrate -w @attendance/sync",
     "db:up": "docker compose -f devops/compose.dev.yaml up -d",
-    "db:down": "docker compose -f devops/compose.dev.yaml down -v"
+    "db:down": "docker compose -f devops/compose.dev.yaml down -v",
+    "check:lockfile": "node scripts/check-lockfile.mjs",
+    "lockfile:linux": "docker run --rm -v \"$PWD:/src\" node:22-alpine sh -c \"mkdir -p /gen/web /gen/backend && cp /src/package.json /gen/ && cp /src/web/package.json /gen/web/ && cp /src/backend/package.json /gen/backend/ && cd /gen && npm install --package-lock-only --no-audit --no-fund && cp package-lock.json /src/\""
   },
   "engines": {
     "node": ">=20.9.0"
   },
   "devDependencies": {
-    "jsdom": "^30.0.1"
-  }
+    "jsdom": "^30.0.1",
+    "next": "^16.3.0"
+  },
+  "//devDependencies": "Hoisted so root-level tooling can resolve them: vitest resolves its environment provider (jsdom) relative to itself, and eslint-config-next resolves next relative to itself. Both live at the root once two workspaces share them."
 }

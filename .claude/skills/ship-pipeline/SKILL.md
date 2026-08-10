@@ -27,6 +27,16 @@ Pass: all unit and integration tests green. Domain rules — window state machin
 suppression, absentee sweep, date-range reporting — must each have a test that fails when the
 rule is broken. Owner: `qa-docker-engineer`.
 
+## Gate 1b — Lockfile portability
+
+```bash
+npm run check:lockfile
+```
+
+Pass: the lockfile names the Linux native bindings. npm records only the platform it resolved on,
+so a lockfile written on Windows makes `npm ci` in the container build a tree that cannot compile
+CSS. Regenerate with `npm run lockfile:linux`. Owner: `qa-docker-engineer`.
+
 ## Gate 2 — Security
 
 ```bash
